@@ -1,0 +1,17 @@
+version 'unspecified'
+
+apply plugin: 'scala'
+
+repositories {
+    mavenCentral()
+}
+
+def scalaMajorVersion = '2.12'
+def scalaMinorVersion = '4'
+
+dependencies {
+    compile(
+            [group: 'org.scala-lang', name: 'scala-compiler', version: "$scalaMajorVersion.$scalaMinorVersion"],
+            [group: 'org.scala-lang', name: 'scala-library', version: "$scalaMajorVersion.$scalaMinorVersion"]
+    )
+}
