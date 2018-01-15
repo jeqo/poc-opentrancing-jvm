@@ -1,0 +1,53 @@
+---
+# APM Tracing Service
+version: '3'
+services:
+  tracing-jaeger-collector:
+    image: jaegertracing/jaeger-collector:1.1.0
+    command: [
+      "/go/bin/collector-linux",
+      "--span-storage.type=cassandra",
+      "--cassandra.keyspace=jaeger_v1_dc1",
+      "--cassandra.servers=tracing-jaeger-cassandra"]
+    depends_on:
+      - tracing-jaeger-cassandra
+  tracing-jaeger-query:
+    image: jaegertracing/jaeger-query:1.1.0
+    command: [
+      "/go/bin/query-linux",
+      "--span-storage.type=cassandra",
+      "--cassandra.keyspace=jaeger_v1_dc1",
+      "--cassandra.servers=tracing-jaeger-cassandra",
+      "--query.static-files=/go/jaeger-ui/"]
+    ports:
+      - 16686:16686
+      - 16687
+    depends_on:
+      - tracing-jaeger-cassandra
+  tracing-jaeger-agent:
+    image: jaegertracing/jaeger-agent:1.1.0
+    command: [
+      "/go/bin/agent-linux",
+      "--collector.host-port=tracing-jaeger-collector:14267"]
+    ports:
+      - 6831:6831/udp
+    depends_on:
+      - tracing-jaeger-collector
+
+  tracing-jaeger-cassandra:
+    image: cassandra:3.9
+    ports:
+      - 9042:9042
+
+  tracing-jaeger-cassandra-schema:
+    image: jaegertracing/jaeger-cassandra-schema:1.1.0
+    environment:
+      - CQLSH_HOST=tracing-jaeger-cassandra
+    depends_on:
+      - tracing-jaeger-cassandra
+
+  tracing-jaeger-dependencies:
+    image: jaegertracing/spark-dependencies:latest
+    environment:
+      - STORAGE=cassandra
+      - CASSANDRA_CONTACT_POINTS=docker-vm
